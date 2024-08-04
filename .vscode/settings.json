@@ -15,5 +15,7 @@
 	],
 	"workbench.editorAssociations": {
 		"*.db": "sqlite-viewer.view"
-	}
+	},
+	"editor.tabSize": 2,
+	"editor.insertSpaces": true
 }
