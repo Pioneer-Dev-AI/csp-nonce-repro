@@ -4,7 +4,10 @@ on:
     branches:
       - main
       - dev
-  pull_request: {}
+  pull_request:
+    branches:
+      - main
+      - dev
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -127,6 +130,9 @@ jobs:
 
       - name: 🎭 Playwright tests
         run: npx playwright test
+        # hack to disable cache
+        env:
+          DISABLE_FASTIFY_CACHE: true
 
       - name: 📊 Upload report
         uses: actions/upload-artifact@v4
