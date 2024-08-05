@@ -19,25 +19,27 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 await app.register(fastifyCaching, {
-	privacy: 'private',
-	expiresIn: 3600, // Cache for 1 hour
+  privacy: 'private',
+  expiresIn: 3600, // Cache for 1 hour
 })
 
 await app.register(
-	helmet,
-	// enable csp nonces generation with default content-security-policy option
-	{ enableCSPNonces: true },
+  helmet,
+  // enable csp nonces generation with default content-security-policy option
+  { enableCSPNonces: true },
 )
 
 await app.register(compress, {
-	global: true, // Enable compression globally
+  global: true, // Enable compression globally
 })
 
+// Register static files serving only once
 await app.register(fastifyStatic, {
-	root: join(__dirname, 'public'), // Serve static files from the 'public' directory
-	prefix: '/public/', // Access files via /public/<file>
+  root: join(__dirname, 'public'), // Serve static files from the 'public' directory
+  prefix: '/public/', // Access files via /public/<file>
 })
 
+// Ensure no fastifyStatic registration in the apiRouter
 await app.register(apiRouter, { prefix: '/api' })
 await app.register(remixFastify)
 
