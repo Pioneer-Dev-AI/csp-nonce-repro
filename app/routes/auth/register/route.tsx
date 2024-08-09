@@ -4,7 +4,6 @@ import { z } from 'zod'
 import { createEmailValidator, createPasswordValidator } from '#app/utils/validators'
 import { handleAction } from '#app/utils/remix-helpers.server'
 import { ValidationError } from '#shared/utils/errors.server'
-import { signupWithEmail } from '#app/utils/auth.server'
 import type { TransationFunction } from '#app/types'
 
 const createSignupValidator = (t: TransationFunction) => {
@@ -21,20 +20,6 @@ const createSignupValidator = (t: TransationFunction) => {
 }
 
 
-// TODO: add form abstraction
-export const action = handleAction(async ({ request }) => {
-	const formData = await request.formData()
-	const formDataObj = Object.fromEntries(formData.entries())
-
-	const result = createSignupValidator(t).safeParse(formDataObj)
-
-	if (!result.success) {
-		const errors = result.error.flatten().fieldErrors
-		throw new ValidationError(errors)
-	}
-
-	await signupWithEmail(result.data)
-})
 
 export default function RegisterRoute() {
 	const fields = [

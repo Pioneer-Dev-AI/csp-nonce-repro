@@ -49,7 +49,6 @@ await app.register(helmet, {
 			'img-src': ["'self'", 'data:'],
 			'script-src': [
 				"'self'",
-				"'strict-dynamic'",
 				// @ts-ignore
 				(_, reply) => `'nonce-${reply.scriptNonce}'`,
 			],
@@ -58,7 +57,6 @@ await app.register(helmet, {
 				(_, reply) => `'nonce-${reply.scriptNonce}'`,
 			],
 			'upgrade-insecure-requests': null,
-			// Remove the nonce for style-src
 			styleSrc: ["'self'", "'unsafe-inline'"],
 		},
 	},
