@@ -1,0 +1,22 @@
+{
+	"validation": {
+		"email": {
+			"required": "Email is required",
+			"invalid": "Invalid email address"
+		},
+		"password": {
+			"required": "Password is required",
+			"minLength": "Password must be at least 6 characters"
+		},
+		"select": {
+			"required": "Select an option"
+		},
+		"multiSelect": {
+			"required": "Select at least one option"
+		},
+		"age": {
+			"min": "Age must be at least 18",
+			"max": "Age must be at most 120"
+		}
+	}
+}

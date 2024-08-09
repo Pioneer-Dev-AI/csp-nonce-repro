@@ -4,7 +4,7 @@ import href from './icons/sprite.svg'
 import { type IconName } from '@/icon-name'
 
 export { href }
-export { IconName }
+export {type IconName }
 
 const sizeClassName = {
 	font: 'w-[1em] h-[1em]',

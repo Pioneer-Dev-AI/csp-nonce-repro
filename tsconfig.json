@@ -2,8 +2,12 @@
 	"include": ["**/*.ts", "**/*.tsx"],
 	"extends": ["@epic-web/config/typescript"],
 	"compilerOptions": {
+		"moduleDetection": "force",
+		// TODO: uncomment once we can figure out how to make it work with the current setup
+		// "verbatimModuleSyntax": true,
 		"paths": {
 			"#app/*": ["./app/*"],
+			"#shared/*": ["./shared/*"],
 			"#tests/*": ["./tests/*"],
 			"@/icon-name": [
 				"./app/components/ui/icons/name.d.ts",

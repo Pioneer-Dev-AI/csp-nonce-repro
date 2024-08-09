@@ -1,13 +1,3 @@
-# Documented example: https://github.com/superfly/litefs/blob/dec5a7353292068b830001bd2df4830e646f6a2f/cmd/litefs/etc/litefs.yml
-fuse:
-  # Required. This is the mount directory that applications will
-  # use to access their SQLite databases.
-  dir: '${LITEFS_DIR}'
-
-data:
-  # Path to internal data storage.
-  dir: '/data/litefs'
-
 proxy:
   # matches the internal_port in fly.toml
   addr: ':${INTERNAL_PORT}'
@@ -30,14 +20,6 @@ lease:
 
 exec:
   - cmd: npx prisma migrate deploy
-    if-candidate: true
-
-  # Set the journal mode for the database to WAL. This reduces concurrency deadlock issues
-  - cmd: sqlite3 $DATABASE_PATH "PRAGMA journal_mode = WAL;"
-    if-candidate: true
-
-  # Set the journal mode for the cache to WAL. This reduces concurrency deadlock issues
-  - cmd: sqlite3 $CACHE_DATABASE_PATH "PRAGMA journal_mode = WAL;"
     if-candidate: true
 
   - cmd: npm start

@@ -1,11 +1,10 @@
-import { type Connection, type Password, type User } from '@prisma/client'
 import { redirect } from '@remix-run/node'
 import bcrypt from 'bcryptjs'
 import { Authenticator } from 'remix-auth'
 import { safeRedirect } from 'remix-utils/safe-redirect'
-import { connectionSessionStorage, providers } from './connections.server.ts'
+import { connectionSessionStorage } from './connections.server.ts'
 import { prisma } from './db.server.ts'
-import { combineHeaders, downloadFile } from './misc.tsx'
+import { combineHeaders } from './misc.tsx'
 import { type ProviderUser } from './providers/provider.ts'
 import { authSessionStorage } from './session.server.ts'
 
@@ -19,10 +18,38 @@ export const authenticator = new Authenticator<ProviderUser>(
 	connectionSessionStorage,
 )
 
-for (const [providerName, provider] of Object.entries(providers)) {
-	authenticator.use(provider.getAuthStrategy(), providerName)
+export async function signupWithEmail({
+	email,
+	password,
+}: {
+	email: string
+	password: string
+}) {
+	const hashedPassword = await getPasswordHash(password)
+
+	const session = await prisma.session.create({
+		data: {
+			expirationDate: getSessionExpirationDate(),
+			user: {
+				create: {
+					email: email.toLowerCase(),
+					password: {
+						create: {
+							hash: hashedPassword,
+						},
+					},
+				},
+			},
+		},
+		select: { id: true, expirationDate: true },
+	})
+
+	return session
 }
 
+
+
+// old stuff
 export async function getUserId(request: Request) {
 	const authSession = await authSessionStorage.getSession(
 		request.headers.get('cookie'),
@@ -42,6 +69,7 @@ export async function getUserId(request: Request) {
 	}
 	return session.user.id
 }
+
 
 export async function requireUserId(
 	request: Request,
@@ -70,117 +98,77 @@ export async function requireAnonymous(request: Request) {
 	}
 }
 
-export async function login({
-	username,
-	password,
-}: {
-	username: User['username']
-	password: string
-}) {
-	const user = await verifyUserPassword({ username }, password)
-	if (!user) return null
-	const session = await prisma.session.create({
-		select: { id: true, expirationDate: true, userId: true },
-		data: {
-			expirationDate: getSessionExpirationDate(),
-			userId: user.id,
-		},
-	})
-	return session
-}
+// export async function login({
+// 	username,
+// 	password,
+// }: {
+// 	username: User['username']
+// 	password: string
+// }) {
+// 	const user = await verifyUserPassword({ username }, password)
+// 	if (!user) return null
+// 	const session = await prisma.session.create({
+// 		select: { id: true, expirationDate: true, userId: true },
+// 		data: {
+// 			expirationDate: getSessionExpirationDate(),
+// 			userId: user.id,
+// 		},
+// 	})
+// 	return session
+// }
 
-export async function resetUserPassword({
-	username,
-	password,
-}: {
-	username: User['username']
-	password: string
-}) {
-	const hashedPassword = await getPasswordHash(password)
-	return prisma.user.update({
-		where: { username },
-		data: {
-			password: {
-				update: {
-					hash: hashedPassword,
-				},
-			},
-		},
-	})
-}
+// export async function resetUserPassword({
+// 	username,
+// 	password,
+// }: {
+// 	username: User['username']
+// 	password: string
+// }) {
+// 	const hashedPassword = await getPasswordHash(password)
+// 	return prisma.user.update({
+// 		where: { username },
+// 		data: {
+// 			password: {
+// 				update: {
+// 					hash: hashedPassword,
+// 				},
+// 			},
+// 		},
+// 	})
+// }
 
-export async function signup({
-	email,
-	username,
-	password,
-	name,
-}: {
-	email: User['email']
-	username: User['username']
-	name: User['name']
-	password: string
-}) {
-	const hashedPassword = await getPasswordHash(password)
 
-	const session = await prisma.session.create({
-		data: {
-			expirationDate: getSessionExpirationDate(),
-			user: {
-				create: {
-					email: email.toLowerCase(),
-					username: username.toLowerCase(),
-					name,
-					roles: { connect: { name: 'user' } },
-					password: {
-						create: {
-							hash: hashedPassword,
-						},
-					},
-				},
-			},
-		},
-		select: { id: true, expirationDate: true },
-	})
+// export async function signupWithConnection({
+// 	email,
+// 	username,
+// 	name,
+// 	providerId,
+// 	providerName,
+// }: {
+// 	email: User['email']
+// 	username: User['username']
+// 	name: User['name']
+// 	providerId: Connection['providerId']
+// 	providerName: Connection['providerName']
+// 	imageUrl?: string
+// }) {
+// 	const session = await prisma.session.create({
+// 		data: {
+// 			expirationDate: getSessionExpirationDate(),
+// 			user: {
+// 				create: {
+// 					email: email.toLowerCase(),
+// 					username: username.toLowerCase(),
+// 					name,
+// 					connections: { create: { providerId, providerName } },
+// 				},
+// 			},
+// 		},
+// 		select: { id: true, expirationDate: true },
+// 	})
 
-	return session
-}
-
-export async function signupWithConnection({
-	email,
-	username,
-	name,
-	providerId,
-	providerName,
-	imageUrl,
-}: {
-	email: User['email']
-	username: User['username']
-	name: User['name']
-	providerId: Connection['providerId']
-	providerName: Connection['providerName']
-	imageUrl?: string
-}) {
-	const session = await prisma.session.create({
-		data: {
-			expirationDate: getSessionExpirationDate(),
-			user: {
-				create: {
-					email: email.toLowerCase(),
-					username: username.toLowerCase(),
-					name,
-					roles: { connect: { name: 'user' } },
-					connections: { create: { providerId, providerName } },
-					image: imageUrl
-						? { create: await downloadFile(imageUrl) }
-						: undefined,
-				},
-			},
-		},
-		select: { id: true, expirationDate: true },
-	})
-
-	return session
-}
+// 	return session
+// }
 
 export async function logout(
 	{
@@ -217,24 +205,24 @@ export async function getPasswordHash(password: string) {
 	return hash
 }
 
-export async function verifyUserPassword(
-	where: Pick<User, 'username'> | Pick<User, 'id'>,
-	password: Password['hash'],
-) {
-	const userWithPassword = await prisma.user.findUnique({
-		where,
-		select: { id: true, password: { select: { hash: true } } },
-	})
+// export async function verifyUserPassword(
+// 	where: Pick<User, 'username'> | Pick<User, 'id'>,
+// 	password: Password['hash'],
+// ) {
+// 	const userWithPassword = await prisma.user.findUnique({
+// 		where,
+// 		select: { id: true, password: { select: { hash: true } } },
+// 	})
 
-	if (!userWithPassword || !userWithPassword.password) {
-		return null
-	}
+// 	if (!userWithPassword || !userWithPassword.password) {
+// 		return null
+// 	}
 
-	const isValid = await bcrypt.compare(password, userWithPassword.password.hash)
+// 	const isValid = await bcrypt.compare(password, userWithPassword.password.hash)
 
-	if (!isValid) {
-		return null
-	}
+// 	if (!isValid) {
+// 		return null
+// 	}
 
-	return { id: userWithPassword.id }
-}
+// 	return { id: userWithPassword.id }
+// }
